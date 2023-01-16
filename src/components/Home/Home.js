@@ -12,13 +12,11 @@ import { useDispatch } from "react-redux"
 import { useHistory, useLocation } from "react-router-dom"
 import ChipInput from "material-ui-chip-input"
 
-import { getPosts } from "../../actions/posts"
+import { getPosts, getPostsBySearch } from "../../actions/posts"
 import Pagination from "../Pagination"
 
 import Posts from "../Posts/Posts"
 import Form from "../Form/Form"
-import useStyles from "./styles"
-
 import useStyles from "./styles"
 
 function useQuery() {
@@ -28,6 +26,8 @@ function useQuery() {
 const Home = () => {
   const [currentId, setCurrentId] = useState(null)
   const classes = useStyles()
+  const [search, setSearch] = useState("")
+  const [tags, setTags] = useState([])
   const dispatch = useDispatch()
   const query = useQuery()
   const history = useHistory()
@@ -37,6 +37,26 @@ const Home = () => {
   useEffect(() => {
     dispatch(getPosts())
   }, [currentId, dispatch])
+
+  const searchPost = () => {
+    if (search.trim()) {
+      dispatch(getPostsBySearch({ search, tags: tags.join(",") }))
+    } else {
+      history.push("/")
+    }
+  }
+
+  const handleKeyPress = (e) => {
+    if (e.keyCode === 13) {
+      searchPost()
+    }
+  }
+
+  const handleAdd = (tag) => setTags([...tags, tag])
+
+  const handleDelete = (tagToDelete) =>
+    setTags(tags.filter((tag) => tag !== tagToDelete))
+
   return (
     <Grow in>
       <Container maxWidth="xl">
@@ -61,10 +81,27 @@ const Home = () => {
                 name="search"
                 variant="outlined"
                 label="Search Memorials"
+                onKeyPress={handleKeyPress}
                 fullWidth
-                value="Test"
-                onChange={() => {}}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
               />
+              <ChipInput
+                style={{ margin: "10px 0" }}
+                value={tags}
+                onAdd={handleAdd}
+                onDelete={handleDelete}
+                label="Search Tags"
+                variant="outlined"
+              />
+              <Button
+                onClick={searchPost}
+                className={classes.searchButton}
+                variant="contained"
+                color="primary"
+              >
+                Search
+              </Button>
             </AppBar>
             <Form currentId={currentId} setCurrentId={setCurrentId} />
             <Paper elevation={6}>
